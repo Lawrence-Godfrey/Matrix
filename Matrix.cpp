@@ -2,23 +2,21 @@
 
 Matrix::Matrix() : values(nullptr), num_cols(0), num_rows(0) {}
 
-Matrix::Matrix(const int & rows, const int & cols) : num_rows(rows), num_cols(cols) {
-    values = new double [num_rows * num_cols];
+Matrix::Matrix(const int & rows, const int & cols) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {}
+
+Matrix::Matrix(const double & init_value, const int & rows, const int & cols) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {
+    for (int i = 0; i < num_cols * num_rows; i++) {
+        values[i] = init_value;
+    }
 }
 
-Matrix::Matrix(const double * matrix, const int & rows, const int & cols) : num_rows(rows), num_cols(cols) {
-    values = new double [num_rows * num_cols];
-
-    for (int i = 0; i < num_rows; i++)
-		for(int j = 0; j < num_cols; j++)
-            values[i * num_cols + j] = matrix[i * num_cols + j];
+Matrix::Matrix(const double * matrix, const int & rows, const int & cols) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {  
+    memcpy(values, matrix, sizeof(values[0]) * num_rows * num_cols);
 }
 
-Matrix::Matrix(const Matrix & right) : num_cols(right.columns()), num_rows(right.columns()) {   
 
+Matrix::Matrix(const Matrix & right) : num_cols(right.columns()), num_rows(right.columns()), values(new double [num_rows * num_cols]) {   
     std::cout << "in copy constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
-
-    values = new double[num_rows * num_cols];
     memcpy(values, right.values, sizeof(values[0]) * num_rows * num_cols);
 }
 
@@ -27,9 +25,8 @@ Matrix::Matrix(Matrix && right) : values(right.values), num_cols(right.columns()
     std::cout << "in move constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
 }
 
-Matrix::Matrix(std::initializer_list<std::initializer_list<double>> list) : num_rows(list.size()), num_cols(list.begin()->size()) {
+Matrix::Matrix(const std::initializer_list<std::initializer_list<double>> list) : num_rows(list.size()), num_cols(list.begin()->size()), values(new double [num_rows * num_cols]) {
     int i = 0;
-    values = new double[num_rows * num_cols];
 
     for (auto row : list) 
         for(auto value : row) 
@@ -71,6 +68,11 @@ Matrix & Matrix::operator = (Matrix && right) {
 }
 
 
+Matrix && Matrix::operator = (const std::initializer_list<std::initializer_list<double>> & list) {   
+    return Matrix (list);
+}
+
+
 const double * Matrix::getValues() const {
     return this->values;
 }
@@ -104,6 +106,7 @@ Matrix Matrix::operator * (const Matrix & right) const {
     Matrix output_matrix (output, rows, right_columns);
 
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -123,7 +126,9 @@ Matrix operator * (const Matrix & left, const double & right) {
 			output[i * columns + j] = values[i * columns + j] * right;
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -142,7 +147,9 @@ Matrix operator * (const double & left, const Matrix & right) {
 			output[i * columns + j] = left * values[i * columns + j];
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -164,7 +171,9 @@ Matrix Matrix::operator + (const Matrix & right) const {
 			output[i * columns + j] = values[i * columns + j] + right.getValues()[i * columns + j];
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -184,7 +193,9 @@ Matrix operator + (const Matrix & left, const double & right) {
 			output[i * columns + j] = values[i * columns + j] + right;
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -203,7 +214,9 @@ Matrix operator + (const double & left, const Matrix & right) {
 			output[i * columns + j] = left + values[i * columns + j];
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -226,7 +239,9 @@ Matrix Matrix::operator - (const Matrix & right) const {
 			output[i * columns + j] = values[i * columns + j] - right.getValues()[i * columns + j];
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -246,7 +261,9 @@ Matrix operator - (const Matrix & left, const double & right) {
 			output[i * columns + j] = values[i * columns + j] - right;
 
     Matrix output_matrix(output, rows, columns);
+   
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -265,7 +282,9 @@ Matrix operator - (const double & left, const Matrix & right) {
 			output[i * columns + j] = left - values[i * columns + j];
 
     Matrix output_matrix(output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -284,8 +303,10 @@ Matrix Matrix::row (const int & row) const {
     for(int j = 0; j < columns; j++)
         output[j] = values[row * columns + j];
 
-    Matrix output_matrix(output, 1, columns);
+    Matrix output_matrix (output, 1, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -304,8 +325,10 @@ Matrix Matrix::col (const int & col) const {
     for(int j = 0; j < rows; j++)
         output[j] = values[j * this->columns() + col];
 
-    Matrix output_matrix(output, rows, 1);
+    Matrix output_matrix (output, rows, 1);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
@@ -316,6 +339,30 @@ int Matrix::rows() const {
 
 int Matrix::columns() const {
     return num_cols;
+}
+
+double Matrix::max () const {
+    double maxval = std::numeric_limits<double>::lowest();
+
+    for (int i = 0; i < rows() * columns(); i++) {
+        if (values[i] > maxval) {
+            maxval = values[i];
+        }
+    }
+
+    return maxval;
+}
+
+double Matrix::min () const {
+    double minval = std::numeric_limits<double>::max();
+
+    for (int i = 0; i < rows() * columns(); i++) {
+        if (values[i] < minval) {
+            minval = values[i];
+        }
+    }
+
+    return minval;
 }
 
 
@@ -331,18 +378,22 @@ Matrix Matrix::Transpose () const {
 		for(j = 0; j < columns; j++)
 			output[j * rows + i] = values[i * columns + j];
 
-    Matrix output_matrix(output, rows, columns);
+    Matrix output_matrix (output, rows, columns);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
 }
 
 
 std::ostream & operator << (std::ostream & os, const Matrix & matrix) {
+    int width = std::to_string(matrix.max()).size();
+    std::cout << "max: " << matrix.max() << std::endl;
     for (int i = 0; i < matrix.rows(); i++) {
         os << "|";
 		for(int j = 0; j < matrix.columns(); j++) {
-            os << " " << matrix.values[i * matrix.columns() + j];
+            os << " " << std::setfill(' ') << std::setw(width) << matrix.values[i * matrix.columns() + j];
         }
         os << " |" << std::endl;
     }
@@ -356,9 +407,10 @@ Matrix Identity(const int & size) {
     for (int i = 0; i < size; i++)
         output[i * size + i] = 1.0;
 
-    Matrix output_matrix(output, size, size);
+    Matrix output_matrix (output, size, size);
+    
     delete [] output;
+    output = nullptr;
 
     return output_matrix;
-
 }

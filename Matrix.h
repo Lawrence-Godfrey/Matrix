@@ -1,26 +1,25 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <initializer_list>
 #include <exception>
 #include <memory.h>
+#include <limits>
 
 class Matrix {
-    double * values;
-
     int num_rows;
     int num_cols;
 
-    double * getRow(const int & row);
-    double * getCol(const int & col);
+    double * values;
 
     public: 
         Matrix();
         Matrix(const int & rows, const int & cols);
+        Matrix(const double & init_value, const int & rows, const int & cols);
         Matrix(const double * matrix, const int & rows, const int & cols);
         Matrix(const Matrix & right);
         Matrix(Matrix && right);
-
         Matrix(std::initializer_list<std::initializer_list<double>> list);
 
         ~Matrix();
@@ -28,6 +27,8 @@ class Matrix {
         Matrix & operator = (const Matrix & right);
 
         Matrix & operator = (Matrix && right);
+
+        Matrix && operator = (const std::initializer_list<std::initializer_list<double>> & list);
         
         const double * getValues() const;
 
@@ -48,6 +49,9 @@ class Matrix {
 
         int rows(const double * matrix) const;
         int columns(const double * matrix) const;
+        
+        double max() const;
+        double min() const;
 
         Matrix Transpose () const;
 
@@ -79,5 +83,12 @@ class MultiplyMatrixError : public MatrixDimensionError {
      public:
         const char * what () const throw () {
             return "Error Multiplying Matrices due to dimension error";
+        }
+};
+
+class EmptyMatrixError : public MatrixDimensionError {
+     public:
+        const char * what () const throw () {
+            return "Error: Empty Matrix";
         }
 };

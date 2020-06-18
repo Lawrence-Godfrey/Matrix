@@ -1,4 +1,7 @@
 #include "Matrix.h"
+#include <vector> 
+#include <chrono>
+
 
 int main() {
     using namespace std;
@@ -9,7 +12,7 @@ int main() {
     mat1[1] = 2;
     mat1[2] = 3;
     mat1[3] = 4;
-
+    
     Matrix M1(mat1, 2, 2);
     cout << "M1,  using array" << endl << M1 << endl;
 
@@ -55,6 +58,31 @@ int main() {
     Matrix col = I.col(4);
     cout << "column 4 of I" << col << endl;
 
+    Matrix vec1 = {{2, 3, 5, 2}};
+    Matrix vec2 = {{4}, {5}, {2}, {7}};
 
+    cout << "vec1 * vec2" << endl << vec1*vec2 << endl;
+
+    cout << "vec2 * vec1" << endl << vec2*vec1 << endl;
+
+    vector<Matrix> matvec;
+    matvec.push_back(Matrix({{1, 2}, {3, 4}}));
+
+    cout << matvec.at(0);
+
+    const auto begin = std::chrono::high_resolution_clock::now();
+
+    Matrix largeMatrix (2.5, 1000, 1000);
+    Matrix AnotherLargeMatrix (5.0, 1000, 1000);
+
+    auto time = std::chrono::high_resolution_clock::now() - begin;
+
+    Matrix Product = largeMatrix * AnotherLargeMatrix;
+
+    std::cout << "Time taken for multiplication: " << chrono::duration<double, std::milli>(time).count() << ".\n";
+
+    Matrix M12 = {{1, 2, 3, 4}};
+
+    cout << "M12 by init list assignment" << endl << M12 << endl;
     return 0;
 }
