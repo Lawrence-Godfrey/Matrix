@@ -25,6 +25,7 @@ class Matrix {
         Matrix(const std::pair<unsigned int, unsigned int> & shape);
         Matrix(const std::pair<unsigned int, unsigned int> & shape, const double & init_val = 0);
 
+        Matrix(const std::vector<std::vector<double>> & vec);
         Matrix(const double * matrix, const unsigned int & rows, const unsigned int & cols);
         Matrix(const Matrix & right);
         Matrix(Matrix && right);
@@ -74,6 +75,8 @@ class Matrix {
 
         Matrix Transpose () const;
 
+        std::vector<std::vector<double>> toVector() const;
+
         friend std::ostream & operator << (std::ostream & os, const Matrix & matrix);
 };
 
@@ -115,7 +118,6 @@ Matrix Identity(const unsigned int & size);
 
 Matrix RandomMatrix(const unsigned int & rows, const unsigned int & columns);
 Matrix RandomNormalMatrix(const unsigned int & rows, const unsigned int & columns, const double & mean = 0, const double & sigma = 1);
-
 
 class MatrixDimensionError : public std::exception {
     public:

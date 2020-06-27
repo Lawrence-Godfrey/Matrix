@@ -4,6 +4,12 @@ Matrix::Matrix() : values(nullptr), num_cols(0), num_rows(0) {}
 
 Matrix::Matrix(const unsigned int & rows, const unsigned int & cols) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {}
 
+Matrix::Matrix(const unsigned int & rows, const unsigned int & cols, const double & init_value) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {
+    for (unsigned int i = 0; i < num_cols * num_rows; i++) {
+        values[i] = init_value;
+    }
+}
+
 Matrix::Matrix(const std::pair<unsigned int, unsigned int> & shape) : Matrix(shape.first, shape.second) {}
 
 Matrix::Matrix(const std::pair<unsigned int, unsigned int> & shape, const double & init_value) : Matrix(shape.first, shape.second) {
@@ -12,9 +18,12 @@ Matrix::Matrix(const std::pair<unsigned int, unsigned int> & shape, const double
     }
 }
 
-Matrix::Matrix(const unsigned int & rows, const unsigned int & cols, const double & init_value) : num_rows(rows), num_cols(cols), values(new double [num_rows * num_cols]) {
-    for (unsigned int i = 0; i < num_cols * num_rows; i++) {
-        values[i] = init_value;
+Matrix::Matrix(const std::vector<std::vector<double>> & vec) : Matrix(vec.size(), vec.at(0).size()) {
+    int i = 0;
+    for (auto & row : vec) {
+        for (auto & value : row) {
+            values[i++] = value;
+        }
     }
 }
 
@@ -129,13 +138,14 @@ Matrix Matrix::dot(const Matrix & right) const {
     if (this->columns() != right.rows()) 
         throw MultiplyMatrixError();
     
-    Matrix output_matrix (this->rows(), right.columns());
+    Matrix output_matrix (this->rows(), right.columns(), 0);
 
 
     for (unsigned int i = 0; i < this->rows(); i++) 
         for (unsigned int k = 0; k < this->columns(); k++)
-    		for(unsigned int j = 0; j < right.columns(); j++)
+    		for(unsigned int j = 0; j < right.columns(); j++) 
 				output_matrix(i, j) += this->operator()(i, k) * right(k, j);
+            
 		
     return output_matrix;
 }
@@ -304,10 +314,10 @@ void Matrix::addRow(const Matrix & rowMatrix) {
     double * temp = values;
 
     values = nullptr;
-    values = new double [rows() * columns() + rowMatrix.columns()];
+    values = new double [size() + rowMatrix.columns()];
 
-    memcpy(values, temp, sizeof(temp[0]) * rows() * columns());
-    memcpy(values + rows() * columns(), rowMatrix.values, sizeof(temp[0]) * rows() * columns());
+    memcpy(values, temp, sizeof(temp[0]) * size());
+    memcpy(values + size(), rowMatrix.values, sizeof(temp[0]) * size());
 
     num_rows++;
 
@@ -321,10 +331,10 @@ void Matrix::addColumn(const Matrix & columnMatrix) {
     double * temp = values;
 
     values = nullptr;
-    values = new double [rows() * columns() + columnMatrix.rows()];
+    values = new double [size() + columnMatrix.rows()];
 
-    memcpy(values, temp, sizeof(temp[0]) * rows() * columns());
-    memcpy(values + rows() * columns(), columnMatrix.values, sizeof(temp[0]) * rows() * columns());
+    memcpy(values, temp, sizeof(temp[0]) * size());
+    memcpy(values + size(), columnMatrix.values, sizeof(temp[0]) * size());
 
     num_rows++;
 }
@@ -332,7 +342,7 @@ void Matrix::addColumn(const Matrix & columnMatrix) {
 double Matrix::max() const {
     double maxval = std::numeric_limits<double>::lowest();
 
-    for (unsigned int i = 0; i < rows() * columns(); i++) {
+    for (unsigned int i = 0; i < size(); i++) {
         if (values[i] > maxval) {
             maxval = values[i];
         }
@@ -344,7 +354,7 @@ double Matrix::max() const {
 double Matrix::min() const {
     double minval = std::numeric_limits<double>::max();
 
-    for (unsigned int i = 0; i < rows() * columns(); i++) {
+    for (unsigned int i = 0; i < size(); i++) {
         if (values[i] < minval) {
             minval = values[i];
         }
@@ -356,13 +366,26 @@ double Matrix::min() const {
 
 Matrix Matrix::Transpose() const {
 
-    Matrix output_matrix (*this);
+    Matrix output_matrix (this->columns(), this->rows());
 
 	for (unsigned int i = 0; i < this->rows(); i++)
 		for(unsigned int j = 0; j < this->columns(); j++)
 			output_matrix(j, i) = this->operator()(i, j);
 
     return output_matrix;
+}
+
+
+std::vector<std::vector<double>> Matrix::toVector() const {
+    std::vector<std::vector<double>> output_vector(size());
+    for (auto & row : output_vector) 
+        row = std::vector<double> (rows());
+    
+    for (unsigned int i = 0; i < rows(); i++)
+        for(unsigned int j = 0; j < columns(); j++)
+            output_vector.at(i).at(j) = this->operator()(i, j);
+
+    return output_vector;
 }
 
 
@@ -391,7 +414,7 @@ bool operator == (const Matrix & left, const Matrix & right) {
     if (left.rows() != right.rows() || left.columns() != right.columns())
         return false;
     
-    for (unsigned int i = 0; i < left.rows() * left.columns(); i++) 
+    for (unsigned int i = 0; i < left.size(); i++) 
         if (std::abs(leftValues[i] - rightValues[i]) >= epsilon1 + std::max(std::abs(rightValues[i]), std::abs(leftValues[i])) * epsilon2) 
             return false;
 
@@ -410,7 +433,8 @@ Matrix Identity(const unsigned int & size) {
 Matrix RandomMatrix(const unsigned int & rows, const unsigned int & columns) {
     Matrix output_matrix (rows, columns);
 
-    std::default_random_engine generator(42);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
     std::uniform_real_distribution<double> distribution (-1, 1);
 
     for (unsigned int i = 0; i < rows * columns; i++)
@@ -429,12 +453,11 @@ Matrix RandomNormalMatrix(const unsigned int & rows, const unsigned int & column
 
     for (unsigned int i = 0; i < rows * columns;) {
         double randnum = distribution(generator);
-        if (randnum < 1 && randnum > -1 && std::abs(randnum) > 1e-100) {
-            output_matrix(i) = randnum;
-            std::cout << randnum;
-            i++;
-        }
+        if (randnum < 1 && randnum > -1) 
+            output_matrix(i++) = randnum;
+
     }
     
     return output_matrix;
 }
+
