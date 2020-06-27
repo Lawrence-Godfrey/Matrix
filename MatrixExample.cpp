@@ -20,8 +20,8 @@ int main() {
                  {3, 4}};
                  
     cout << "M2, using list initializer" << endl << M2 << endl;
-
-    Matrix M3 = M1 * M2;
+    cout << "M2 at 1, 1: " << M2(1, 0) << endl;
+    Matrix M3 = M1.dot(M2);
     cout << "M1 * M2" << endl << M3 << endl;
 
     Matrix M4 = M1 + M2;
@@ -48,6 +48,7 @@ int main() {
 
     Matrix M11 = M10 - 1;
     cout << "M10 - 1" << endl << M11 <<endl;
+    cout << "(M10 - 1) * 5: " << endl << (M10 - 1);
 
     Matrix I = Identity(10);
     cout << "Identity of 10 x 10\n" << I << endl;
@@ -61,28 +62,33 @@ int main() {
     Matrix vec1 = {{2, 3, 5, 2}};
     Matrix vec2 = {{4}, {5}, {2}, {7}};
 
-    cout << "vec1 * vec2" << endl << vec1*vec2 << endl;
+    cout << "vec1 * vec2" << endl << vec1.dot(vec2) << endl;
 
-    cout << "vec2 * vec1" << endl << vec2*vec1 << endl;
+    cout << "vec2 * vec1" << endl << vec2.dot(vec1) << endl;
 
     vector<Matrix> matvec;
     matvec.push_back(Matrix({{1, 2}, {3, 4}}));
 
     cout << matvec.at(0);
 
+
+    Matrix largeMatrix (1000, 1000, 2.5);
+    Matrix AnotherLargeMatrix (1000, 1000, 5.0);
+    
+    cout << "largeMatrix == AnotherLargeMatrix: " << (largeMatrix == AnotherLargeMatrix) << endl;
     const auto begin = std::chrono::high_resolution_clock::now();
 
-    Matrix largeMatrix (2.5, 1000, 1000);
-    Matrix AnotherLargeMatrix (5.0, 1000, 1000);
-
+    Matrix Product = largeMatrix.dot(AnotherLargeMatrix);
+    
     auto time = std::chrono::high_resolution_clock::now() - begin;
-
-    Matrix Product = largeMatrix * AnotherLargeMatrix;
-
-    std::cout << "Time taken for multiplication: " << chrono::duration<double, std::milli>(time).count() << ".\n";
-
+    std::cout << "Time taken for multiplication 1: " << chrono::duration<double, std::milli>(time).count() << " ms.\n";
+    
+    
     Matrix M12 = {{1, 2, 3, 4}};
 
     cout << "M12 by init list assignment" << endl << M12 << endl;
+
+    vector<int> v1 (3);
+    v1 == vector<int>({1, 2, 3});
     return 0;
 }
