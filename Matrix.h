@@ -8,8 +8,11 @@
 #include <limits>
 #include <random>
 #include <chrono>
+#include <stdexcept>
 
 
+
+#define throw_line(arg) throw MultiplyMatrixError(arg, __FILE__, __LINE__);
 
 class Matrix {
     unsigned int num_rows;
@@ -74,6 +77,8 @@ class Matrix {
         double min() const;
 
         Matrix Transpose () const;
+        Matrix flattenVertical() const;
+        Matrix flattenHorizontal() const;
 
         std::vector<std::vector<double>> toVector() const;
 
@@ -126,11 +131,22 @@ class MatrixDimensionError : public std::exception {
         }
 };
 
-class MultiplyMatrixError : public MatrixDimensionError {
-     public:
-        const char * what () const throw () {
-            return "Error Multiplying Matrices due to dimension error";
+class MultiplyMatrixError : public std::runtime_error {
+    std::string msg;
+    public:
+    
+    MultiplyMatrixError(const std::string &arg, const char *file, int line) :
+        std::runtime_error(arg) {
+            std::ostringstream o;
+            o << file << ":" << line << ": " << arg;
+            msg = o.str();
         }
+    
+    ~MultiplyMatrixError() throw() {}
+     
+    const char * what () const throw () {
+        return msg.c_str();
+    }
 };
 
 class EmptyMatrixError : public MatrixDimensionError {

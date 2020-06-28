@@ -33,13 +33,13 @@ Matrix::Matrix(const double * matrix, const unsigned int & rows, const unsigned 
 
 
 Matrix::Matrix(const Matrix & right) : num_cols(right.columns()), num_rows(right.rows()), values(new double [num_rows * num_cols]) {   
-    std::cout << "in copy constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
+    // std::cout << "in copy constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
     memcpy(values, right.values, sizeof(values[0]) * num_rows * num_cols);
 }
 
 Matrix::Matrix(Matrix && right) : values(right.values), num_cols(right.columns()), num_rows(right.columns()) {
     right.values = nullptr;
-    std::cout << "in move constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
+    // std::cout << "in move constructor" << std::endl << "rows: " << num_rows << " cols: " << num_cols << std::endl << std::flush;
 }
 
 Matrix::Matrix(const std::initializer_list<std::initializer_list<double>> list) {
@@ -61,7 +61,7 @@ Matrix::Matrix(const std::initializer_list<std::initializer_list<double>> list) 
         for(auto value : row) 
             values[i++] = value;
     
-    std::cout << "in init constructor" << std::endl;
+    // std::cout << "in init constructor" << std::endl;
 
 }
 
@@ -80,7 +80,7 @@ Matrix & Matrix::operator = (const Matrix & right) {
 
     memcpy(values, right.values, sizeof(values[0]) * right.size());
 
-    std::cout << "in copy assignment" << std::endl;
+    // std::cout << "in copy assignment" << std::endl;
     
     return *this;
 }
@@ -96,14 +96,14 @@ Matrix & Matrix::operator = (Matrix && right) {
     values = right.values;
     right.values = nullptr;
 
-    std::cout << "in move assignment" << std::endl;
+    // std::cout << "in move assignment" << std::endl;
     
     return *this;
 }
 
 
 Matrix & Matrix::operator = (const std::initializer_list<std::initializer_list<double>> & list) {   
-    std::cout << "in init assignment " << std::endl;
+    // std::cout << "in init assignment " << std::endl;
     
     this->num_rows = list.size();
     this->num_cols = list.begin()->size();
@@ -123,7 +123,7 @@ Matrix & Matrix::operator = (const std::initializer_list<std::initializer_list<d
         for(auto value : row) 
             this->operator()(i++) = value;
     
-    std::cout << "in init constructor" << std::endl;
+    // std::cout << "in init constructor" << std::endl;
 
     return *this;
 }
@@ -136,7 +136,7 @@ inline const double * Matrix::getValues() const {
 // Matrix Multiplication 
 Matrix Matrix::dot(const Matrix & right) const {
     if (this->columns() != right.rows()) 
-        throw MultiplyMatrixError();
+        throw_line("Matrix Multiply Error");
     
     Matrix output_matrix (this->rows(), right.columns(), 0);
 
@@ -375,6 +375,24 @@ Matrix Matrix::Transpose() const {
     return output_matrix;
 }
 
+Matrix Matrix::flattenVertical() const {
+    Matrix output_matrix(size(), 1);
+
+    for (int i = 0; i < size(); i++) 
+        output_matrix(i, 0) = this->operator()(i);
+    
+    return output_matrix;
+}   
+
+Matrix Matrix::flattenHorizontal() const {
+    Matrix output_matrix(1, size());
+
+    for (int i = 0; i < size(); i++) 
+        output_matrix(0, i) = this->operator()(i);
+    
+    return output_matrix;
+}
+
 
 std::vector<std::vector<double>> Matrix::toVector() const {
     std::vector<std::vector<double>> output_vector(size());
@@ -396,7 +414,7 @@ std::ostream & operator << (std::ostream & os, const Matrix & matrix) {
     for (unsigned int i = 0; i < matrix.rows(); i++) {
         os << "|";
 		for(unsigned int j = 0; j < matrix.columns(); j++) {
-            os << " " << std::setfill(' ') << std::setw(std::max(width_max, width_min)) << matrix(i, j);
+            os << " " << std::setfill(' ') << std::setprecision(2) << std::setw(std::min(std::max(width_max, width_min), 5)) << matrix(i, j);
         }
         os << " |" << std::endl;
     }
